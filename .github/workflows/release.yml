@@ -8,6 +8,8 @@ on:
       - local-anime-not-interested.json
       - package.json
       - scripts/build.cjs
+      - marketplace.json
+      - assets/**
       - RELEASE_NOTES.md
       - .github/workflows/release.yml
   workflow_dispatch:
@@ -39,8 +41,8 @@ jobs:
             exit 0
           fi
           gh release create "$release_tag" \
-            local-anime-not-interested.json plugin.js \
+            local-anime-not-interested.json plugin.js assets/icon.png \
             --target "$GITHUB_SHA" \
-            --title "$release_tag — Interested markers" \
+            --title "$release_tag — Not Interested" \
             --notes-file RELEASE_NOTES.md \
             --latest

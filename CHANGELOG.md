@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.1
+
+- Add a 512 × 512 PNG icon with red not-interested and green interested symbols.
+- Replace the SVG data URLs in the extension manifest and tray with a hosted PNG URL accepted by Seanime's image component.
+- Add a custom `marketplace.json` index so users can browse and install the plugin through **Add new repository**.
+- Document both the direct extension install URL and the custom marketplace URL.
+- Include the icon in downloadable releases. The mark states, saved data, and permissions are unchanged.
+
 ## 1.1.0
 
 - Replace **Restore interest** in the card and anime page menus with **Mark as interested**.

@@ -1,3 +1,15 @@
+## Thumbnail and installation links
+
+Adds a 512 × 512 PNG icon with red and green interest symbols. The extension manifest and tray now use a hosted `.png` URL, which fixes Seanime showing a blank thumbnail for the previous SVG data URL.
+
+People can install directly using the manifest URL below, or add this custom marketplace index in **Marketplace → Add new repository**:
+
+```text
+https://raw.githubusercontent.com/randoomdude/Seanime-Extension---Not-Interested/main/marketplace.json
+```
+
+The icon is also included as a release attachment. Saved marks, interested/not-interested behavior, and the Storage-only permission are unchanged.
+
 ## Interested markers
 
 **Mark as interested** replaces the old **Restore interest** menu item. Interested anime cards show a green border and green **Interested** badge in Search and Discover.
@@ -20,4 +32,4 @@ Or download the attached `local-anime-not-interested.json`, place it in your Sea
 
 Tested against Seanime 3.10.3's card markup and plugin APIs. Browser fixture tests passed for both mark states, green styling, visibility while hiding, lazy-grid placeholders, switching states, fresh-runtime persistence with simulated storage, undo, save failures, cleanup, and preservation of earlier negative marks. Seanime 3.10.3 loaded the updated plugin locally.
 
-This is the first public release of the previously local plugin. See [README](https://github.com/randoomdude/Seanime-Extension---Not-Interested#readme) for controls, backups, and development instructions.
+See [README](https://github.com/randoomdude/Seanime-Extension---Not-Interested#readme) for controls, backups, and development instructions.

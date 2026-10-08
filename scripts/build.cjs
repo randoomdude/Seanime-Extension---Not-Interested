@@ -7,7 +7,9 @@ const payload = fs.readFileSync(path.join(root, 'plugin.js'), 'utf8');
 new vm.Script(payload);
 if (!/^\d+\.\d+\.\d+$/.test(info.version)) throw new Error('Use a stable major.minor.patch version.');
 const repository = 'https://github.com/randoomdude/Seanime-Extension---Not-Interested';
-const icon = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><rect x="2" y="2" width="44" height="44" rx="12" fill="#29212a"/><circle cx="24" cy="24" r="13" fill="none" stroke="#fb7185" stroke-width="4"/><path d="M15 15l18 18" stroke="#fb7185" stroke-width="4" stroke-linecap="round"/></svg>');
+// Seanime's external-image component permits URLs ending in .png, but blocks
+// SVG data URLs. Keep the manifest and tray pointed at a real PNG asset.
+const icon = 'https://raw.githubusercontent.com/randoomdude/Seanime-Extension---Not-Interested/main/assets/icon.png';
 const manifest = {
     id: 'local-anime-not-interested',
     name: 'Not Interested',
@@ -24,12 +26,20 @@ const manifest = {
     payload,
     plugin: { version: '1', permissions: { scopes: ['storage'], allow: { networkAccess: {} } } },
 };
-const output = path.join(root, 'local-anime-not-interested.json');
-const text = JSON.stringify(manifest, null, 2) + '\n';
+const marketplaceEntry = Object.fromEntries(['id', 'name', 'version', 'description', 'author', 'manifestURI', 'icon', 'type', 'language', 'lang', 'website'].map(key => [key, manifest[key]]));
+const outputs = {
+    'local-anime-not-interested.json': JSON.stringify(manifest, null, 2) + '\n',
+    'marketplace.json': JSON.stringify([marketplaceEntry], null, 2) + '\n',
+};
 if (process.argv.includes('--check')) {
-    if (fs.readFileSync(output, 'utf8') !== text) throw new Error('Manifest is out of date. Run npm run build and commit it.');
-    console.log('Manifest matches plugin source and version ' + info.version + '.');
+    for (const [name, text] of Object.entries(outputs)) {
+        if (fs.readFileSync(path.join(root, name), 'utf8') !== text) throw new Error(name + ' is out of date. Run npm run build and commit it.');
+    }
+    const png = fs.readFileSync(path.join(root, 'assets/icon.png'));
+    if (!png.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))) throw new Error('The icon must be a valid PNG.');
+    if (!payload.includes(icon)) throw new Error('The tray icon must use the same hosted PNG as the manifest.');
+    console.log('Manifest, marketplace index, and icon match plugin version ' + info.version + '.');
 } else {
-    fs.writeFileSync(output, text);
+    for (const [name, text] of Object.entries(outputs)) fs.writeFileSync(path.join(root, name), text);
     console.log('Built Not Interested ' + info.version + '.');
 }

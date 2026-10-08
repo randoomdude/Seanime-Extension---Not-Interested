@@ -1,5 +1,7 @@
 # Not Interested for Seanime
 
+<img src="assets/icon.png" width="96" height="96" alt="Not Interested plugin icon">
+
 Keep track of anime you have already considered while browsing **Search** and **Discover**.
 
 | Mark | Card appearance | With hiding enabled |
@@ -28,6 +30,16 @@ The manifest contains the complete plugin. Installing it does not require Node.j
 
 You can also download `local-anime-not-interested.json` from the [latest release](https://github.com/randoomdude/Seanime-Extension---Not-Interested/releases/latest), place it in your Seanime extensions folder, and restart Seanime. Keep the filename `local-anime-not-interested.json`. On Windows, use `%APPDATA%\Seanime\extensions` if Seanime uses that data folder, or the extensions folder in your configured data directory.
 
+### Add this plugin's marketplace repository
+
+To browse and install it as a marketplace card, open Seanime's **Marketplace → Add new repository** and use:
+
+```text
+https://raw.githubusercontent.com/randoomdude/Seanime-Extension---Not-Interested/main/marketplace.json
+```
+
+This index contains this plugin. It is a custom repository; inclusion in Seanime's default marketplace requires its maintainer's review.
+
 ## Use
 
 - **Mark as interested:** adds a green card border and green **Interested** badge.
@@ -53,11 +65,11 @@ The extension JSON backs up the code, but your saved marks live in Seanime's dat
 
 [Download releases](https://github.com/randoomdude/Seanime-Extension---Not-Interested/releases) and read the [changelog](CHANGELOG.md).
 
-Each release includes the self-contained extension JSON and the JavaScript source. A repository workflow publishes a release when a new version is pushed to `main`; it leaves existing releases unchanged.
+Each release includes the self-contained extension JSON, JavaScript source, and PNG icon. A repository workflow publishes a release when a new version is pushed to `main`; it leaves existing releases unchanged.
 
 ## Development
 
-`plugin.js` is the source. `scripts/build.cjs` embeds it into the installable JSON using the version in `package.json`.
+`plugin.js` is the source. `scripts/build.cjs` embeds it into the installable JSON and creates the marketplace index using the version in `package.json`. `assets/icon.svg` is the editable icon source; its 512 × 512 PNG export is used by Seanime because extension cards reject SVG data URLs.
 
 ```sh
 npm run build

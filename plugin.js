@@ -5,7 +5,7 @@ function init() {
         const storageKey = 'anime-not-interested-v1';
         const styleSelector = 'style[data-anime-not-interested-style]';
         const scope = ':is([data-search-page-container],[data-discover-page-container])';
-        const icon = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><rect x="2" y="2" width="44" height="44" rx="12" fill="#29212a"/><circle cx="24" cy="24" r="13" fill="none" stroke="#fb7185" stroke-width="4"/><path d="M15 15l18 18" stroke="#fb7185" stroke-width="4" stroke-linecap="round"/></svg>');
+        const icon = 'https://raw.githubusercontent.com/randoomdude/Seanime-Extension---Not-Interested/main/assets/icon.png';
         const tray = ctx.newTray({ iconUrl: icon, withContent: true, width: '380px' });
         let data = { version: 1, enabled: true, hide: false, entries: {} };
         let storageError = '';

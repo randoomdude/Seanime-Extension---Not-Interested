@@ -1,0 +1,46 @@
+name: Publish release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - plugin.js
+      - local-anime-not-interested.json
+      - package.json
+      - scripts/build.cjs
+      - RELEASE_NOTES.md
+      - .github/workflows/release.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Validate plugin and manifest
+        run: npm run check
+      - name: Publish a new version
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          plugin_version=$(node -p 'require("./package.json").version')
+          release_tag="v${plugin_version}"
+          if gh release view "$release_tag" >/dev/null 2>&1; then
+            echo "Release $release_tag already exists; leaving it unchanged."
+            exit 0
+          fi
+          gh release create "$release_tag" \
+            local-anime-not-interested.json plugin.js \
+            --target "$GITHUB_SHA" \
+            --title "$release_tag — Interested markers" \
+            --notes-file RELEASE_NOTES.md \
+            --latest

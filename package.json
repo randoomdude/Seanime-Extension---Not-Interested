@@ -1,0 +1,14 @@
+{
+  "name": "seanime-not-interested",
+  "version": "1.1.0",
+  "private": true,
+  "description": "Interested and not-interested marks for Seanime anime cards",
+  "scripts": {
+    "build": "node scripts/build.cjs",
+    "check": "node --check plugin.js && node scripts/build.cjs --check",
+    "test": "node tests/plugin.cjs"
+  },
+  "devDependencies": {
+    "playwright": "1.62.1"
+  }
+}

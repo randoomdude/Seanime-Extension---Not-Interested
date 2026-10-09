@@ -5,6 +5,7 @@ function init() {
         const storageKey = 'anime-not-interested-v1';
         const styleSelector = 'style[data-anime-not-interested-style]';
         const scope = ':is([data-search-page-container],[data-discover-page-container])';
+        const scheduleScope = '[data-discover-airing-schedule-container]';
         const icon = 'https://raw.githubusercontent.com/randoomdude/Seanime-Extension---Not-Interested/main/assets/icon.png';
         const tray = ctx.newTray({ iconUrl: icon, withContent: true, width: '380px' });
         let data = { version: 1, enabled: true, hide: false, entries: {} };
@@ -20,6 +21,11 @@ function init() {
         let slotsBusy = false;
         let pendingSlots = [];
         let knownSlots = {};
+        let scheduleObserver = null;
+        let scheduleBusy = false;
+        let pendingSchedule = [];
+        let scheduleMenuObserver = null;
+        let currentSchedule = null;
         const actions = [];
 
         function readData() {
@@ -101,15 +107,18 @@ function init() {
             let previous = null;
             if (!commit((next) => {
                 previous = next.entries[String(info.id)] || null;
-                if (previous && previous.status === status) return;
-                next.entries[String(info.id)] = { id: info.id, title: info.title, status: status, markedAt: Date.now() };
+                if (previous && previous.status === status) {
+                    delete next.entries[String(info.id)];
+                } else {
+                    next.entries[String(info.id)] = { id: info.id, title: info.title, status: status, markedAt: Date.now() };
+                }
                 changed = true;
             })) return;
             const label = status === 'interested' ? 'interested' : 'not interested';
-            if (!changed) { ctx.toast.info('This series is already marked ' + label + '.'); return; }
+            if (!changed) return;
             undo = { id: info.id, previous: previous };
             tray.update();
-            ctx.toast.success('Marked ' + label + '.');
+            ctx.toast.success(previous && previous.status === status ? 'Mark cleared.' : 'Marked ' + label + '.');
         }
 
         function clearMark(id) {
@@ -137,32 +146,47 @@ function init() {
         }
 
         function buildCss() {
-            if (!data.enabled || storageError) return '';
+            const controls = scheduleScope + ' [data-ni-schedule-for]';
+            let css = controls + '{display:none;margin-top:4px;}';
+            if (!data.enabled || storageError) return css;
             const interestedIds = Object.keys(data.entries).filter((id) => data.entries[id].status === 'interested');
             const notInterestedIds = Object.keys(data.entries).filter((id) => data.entries[id].status === 'not-interested');
             function selectorFor(ids) {
                 return ':is(' + ids.map((id) => scope + ' [data-media-entry-card-container][data-media-type="anime"][data-media-id="' + id + '"]').join(',') + ')';
             }
             const badgeBase = 'position:absolute;top:8px;left:8px;z-index:16;max-width:calc(100% - 16px);box-sizing:border-box;padding:4px 7px;border-radius:6px;font:600 11px/1.35 system-ui,sans-serif;pointer-events:none;';
-            let css = '';
+            function scheduleSelectorFor(ids, trigger) {
+                return ':is(' + ids.map((id) => scheduleScope + (trigger ? ' [data-state]:has(> div > div > ' : ' div:has(> div > ') + '[data-ni-schedule-for="' + id + '"])').join(',') + ')';
+            }
+            const scheduleBadge = 'display:inline-block;padding:2px 5px;border:1px solid currentColor;border-radius:5px;font:600 11px/1.4 system-ui,sans-serif;';
             if (interestedIds.length) {
                 const interested = selectorFor(interestedIds);
                 css += interested + '{outline:2px solid #4ade80!important;outline-offset:3px;border-radius:8px;}' +
                     interested + '::after{content:"Interested";border:1px solid #4ade80;background:#052e16;color:#bbf7d0;' + badgeBase + '}';
+                const scheduleInterested = scheduleSelectorFor(interestedIds);
+                css += scheduleInterested + '{outline:2px solid #4ade80!important;outline-offset:1px;border-radius:8px;}' +
+                    scheduleInterested + ' [data-ni-schedule-for]{display:block;}' +
+                    scheduleInterested + ' [data-ni-schedule-for]::before{content:"Interested";background:#052e16;color:#bbf7d0;' + scheduleBadge + '}';
             }
             // Hiding applies only to the negative state. Interested cards retain
             // their normal appearance, green border, and badge in either mode.
             if (!notInterestedIds.length) return css;
             const selector = selectorFor(notInterestedIds);
+            const scheduleNegative = scheduleSelectorFor(notInterestedIds);
             if (data.hide) {
                 // A lazy grid replaces offscreen cards with skeletons. An owned
                 // marker keeps its slot hidden while the actual card is unmounted.
                 const slots = notInterestedIds.map((id) => scope + ' [data-media-card-lazy-grid-item]:has(> [data-ni-slot-for="' + id + '"])');
                 return css + selector + '{visibility:hidden!important;}' +
                     selector + ':not([data-media-card-lazy-grid-item] *){display:none!important;}' +
+                    scheduleNegative + ',' + scheduleSelectorFor(notInterestedIds, true) + '{display:none!important;}' +
                     ':is(' + slots.join(',') + '){display:none!important;}';
             }
-            return css + selector + ' [data-media-entry-card-body]{opacity:.28!important;filter:grayscale(.8);}' +
+            return css + scheduleNegative + '>div:first-child{opacity:.28!important;filter:grayscale(.8);}' +
+                scheduleNegative + '>div:last-child>a,' + scheduleNegative + '>div:last-child>p{opacity:.45!important;}' +
+                scheduleNegative + ' [data-ni-schedule-for]{display:block;}' +
+                scheduleNegative + ' [data-ni-schedule-for]::before{content:"Not interested";background:#4c1420;color:#ffe4e6;' + scheduleBadge + '}' +
+                selector + ' [data-media-entry-card-body]{opacity:.28!important;filter:grayscale(.8);}' +
                 selector + ' [data-media-entry-card-title-section]{opacity:.45!important;}' +
                 selector + '::after{content:"Not interested";border:1px solid #fb7185;background:#4c1420;color:#ffe4e6;' + badgeBase + '}' +
                 selector + ':hover [data-media-entry-card-body],' + selector + ':focus-within [data-media-entry-card-body]{opacity:.45!important;}';
@@ -240,13 +264,99 @@ function init() {
             finally { slotsBusy = false; }
         }
 
+        // Add a series marker to Schedule rows. Menus supply the actions,
+        // without adding extra visible buttons to any scheduled episode.
+        async function addScheduleControls(links) {
+            pendingSchedule = pendingSchedule.concat(links);
+            if (scheduleBusy) return;
+            scheduleBusy = true;
+            try {
+                while (pendingSchedule.length) {
+                    const batch = pendingSchedule;
+                    pendingSchedule = [];
+                    const generation = mainGeneration;
+                    for (const link of batch) {
+                        if (generation !== mainGeneration) break;
+                        const match = /^\/entry\?(?:[^#]*&)?id=([1-9]\d*)(?:[&#]|$)/.exec(link.attributes.href || '');
+                        const id = match && Number(match[1]);
+                        if (!Number.isSafeInteger(id) || id <= 0) continue;
+                        const parent = await link.getParent();
+                        if (!parent) continue;
+                        const row = await parent.getParent();
+                        if (!row) continue;
+                        const old = await parent.queryOne('[data-ni-schedule-for]');
+                        if (old && old.attributes['data-ni-schedule-for'] === String(id)) continue;
+                        if (old) old.remove();
+                        const title = await link.getText();
+                        const marker = await ctx.dom.createElement('span');
+                        if (generation !== mainGeneration) { marker.remove(); break; }
+                        marker.setAttribute('data-ni-schedule-for', String(id));
+                        marker.setAttribute('aria-hidden', 'true');
+                        parent.append(marker);
+                        row.addEventListener('contextmenu', () => {
+                            currentSchedule = { id: id, title: title };
+                        });
+                    }
+                }
+            } catch (error) { console.warn('Not interested: schedule: ' + String(error)); }
+            finally { scheduleBusy = false; }
+        }
+
+        async function dismissScheduleMenu() {
+            // Use Radix's own Escape dismissal to release focus and pointer locks.
+            // DOM script manipulation permission is declared in the manifest.
+            try {
+                const host = await ctx.dom.queryOne('body');
+                if (!host) return;
+                const script = await ctx.dom.createElement('script');
+                script.setText("document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',code:'Escape',keyCode:27,which:27,bubbles:true,cancelable:true}));");
+                host.append(script);
+                script.remove();
+            } catch (error) { console.warn('Not interested: close Schedule menu: ' + String(error)); }
+        }
+
+        async function addScheduleMenu(menus) {
+            const selected = currentSchedule;
+            if (!selected || !ready) return;
+            for (const menu of menus) {
+                if (await menu.queryOne('[data-ni-schedule-action]')) continue;
+                const group = await menu.queryOne('[role="group"]');
+                if (!group) continue;
+                const menuText = await group.getText();
+                if (!menuText.includes(selected.title) || !menuText.includes('Preview') || !menuText.includes('Open page')) continue;
+                const itemData = { id: selected.id, type: 'ANIME', title: { userPreferred: selected.title } };
+                for (const [status, title, color] of [
+                    ['interested', 'Mark as interested', '#4ade80'],
+                    ['not-interested', 'Mark not interested', '#fb7185'],
+                ]) {
+                    const item = await ctx.dom.createElement('div');
+                    item.setAttribute('role', 'menuitem');
+                    item.setAttribute('tabindex', '-1');
+                    item.setAttribute('data-ni-schedule-action', status);
+                    item.setCssText('padding:6px 10px;cursor:pointer;user-select:none;color:' + color + ';font-size:13px;');
+                    item.setText(title);
+                    item.addEventListener('click', () => {
+                        mark(itemData, status);
+                        dismissScheduleMenu();
+                    });
+                    group.append(item);
+                }
+            }
+        }
+
         function start() {
             ready = true;
             mainGeneration++;
             style = null;
             knownSlots = {};
             if (slotObserver) slotObserver[0]();
+            if (scheduleObserver) scheduleObserver[0]();
+            if (scheduleMenuObserver) scheduleMenuObserver[0]();
+            currentSchedule = null;
+            pendingSchedule = [];
             slotObserver = ctx.dom.observe(scope + ' [data-media-card-lazy-grid-item-content] > [data-media-entry-card-container][data-media-type="anime"]', rememberSlots);
+            scheduleObserver = ctx.dom.observe(scheduleScope + ' a[href^="/entry?"]', addScheduleControls);
+            scheduleMenuObserver = ctx.dom.observe('[data-sea-context-menu-content]', addScheduleMenu);
             repaint();
         }
         ctx.dom.onReady(start);
@@ -277,7 +387,7 @@ function init() {
             const matching = entries.filter((item) => !query || item.title.toLowerCase().indexOf(query) !== -1 || String(item.id) === query);
             const rows = [
                 tray.text('Not Interested', { style: { fontWeight: '600', fontSize: '17px' } }),
-                tray.text('Right-click an anime card to mark it interested or not interested. Marks appear in Search and Discover.', { style: { fontSize: '13px', opacity: '.8' } }),
+                tray.text('Right-click an anime card or Discover → Schedule row to mark it interested or not interested. Selecting the same mark again clears it.', { style: { fontSize: '13px', opacity: '.8' } }),
                 tray.switch({ label: 'Show marks', fieldRef: enabledRef, disabled: !!storageError }),
                 tray.switch({ label: 'Hide not interested series', fieldRef: hideRef, disabled: !!storageError }),
                 tray.text('Interested series keep their green border and stay visible when hiding is on.', { style: { fontSize: '12px', opacity: '.7' } }),

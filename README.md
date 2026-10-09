@@ -2,7 +2,7 @@
 
 <img src="assets/icon.png" width="96" height="96" alt="Not Interested plugin icon">
 
-Keep track of anime you have already considered while browsing **Search** and **Discover**.
+Keep track of anime you have already considered while browsing **Search** and **Discover**, including **Discover → Schedule**.
 
 | Mark | Card appearance | With hiding enabled |
 | --- | --- | --- |
@@ -45,13 +45,14 @@ This index contains this plugin. It is a custom repository; inclusion in Seanime
 - **Mark as interested:** adds a green card border and green **Interested** badge.
 - **Mark not interested:** fades the card and adds a red **Not interested** badge.
 - Choosing either state replaces the other state for that series. Both actions are available in the card's right-click menu and the anime page's menu.
+- In **Discover → Schedule**, use the **✓ Interested** and **⊘ Not interested** buttons beneath a show's airing time. Existing marks automatically appear on every scheduled episode of that anime. The schedule's native right-click menu still provides Preview and Open page.
 - Open **Tray Plugins → Not Interested** for display settings and your saved series.
 - Turn on **Hide not interested series** to hide only negative marks. Interested series remain visible with their green border and badge.
 - **Show marks** turns all visual effects on or off while keeping your saved choices.
 - **Undo last change** reverses the most recent mark change in the current plugin session.
 - Search the saved list by title or series ID. Use **Clear mark** to return a series to an unmarked state.
 
-The card effects apply to Search and Discover. They do not change AniList watching/dropped status, manga cards, library cards, or downloaded files. The plugin itself makes no network requests.
+The effects apply to Search, Discover's anime cards, and Discover's airing Schedule. Interested schedule rows receive a green border and marker; negative rows fade or disappear when hiding is enabled. They do not change AniList watching/dropped status, manga cards, library cards, or downloaded files. The plugin itself makes no network requests.
 
 ## Update and preserve your marks
 
@@ -84,6 +85,10 @@ npx playwright install chromium
 npm test
 ```
 
-To use an already installed Chromium browser, set `SEANIME_TEST_BROWSER` to its executable path before running the tests. Tests cover both mark states, hiding without losing interested markers, lazy-grid placeholders, switching states, persistence across fresh runtimes, undo, failed saves, cleanup, and migration from the earlier saved format. They do not replace a visual check inside Seanime.
+To use an already installed Chromium browser, set `SEANIME_TEST_BROWSER` to its executable path before running the tests. Tests cover both mark states, hiding without losing interested markers, lazy-grid placeholders, schedule rows and their buttons, duplicate episodes, rows loaded later, switching states, persistence across fresh runtimes, undo, failed saves, cleanup, and migration from the earlier saved format. They do not replace a visual check inside Seanime.
 
 For a new release, update `package.json`, `CHANGELOG.md`, and `RELEASE_NOTES.md`; rebuild the JSON, run the checks, and push to `main`. The release workflow validates that the manifest matches the source before publishing. Changes to Seanime's card markup may require a plugin update.
+
+### Schedule menu and permission
+
+Right-click an entry in **Discover → Schedule** to mark a show Interested or Not interested. Selecting the same state twice clears the mark; choosing the opposite changes it. Each scheduled episode of the same AniList series shares that mark. The added `dom-script-manipulation` permission is used only to send an Escape key event when a Schedule mark is selected so the native menu closes and releases input. Seanime disables automatic updates for plugins with this unsafe flag, so future updates require manual installation. Keep the plugin ID and do not uninstall if you want to retain saved marks.

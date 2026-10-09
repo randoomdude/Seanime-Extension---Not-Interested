@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.2.1
+
+- Clicking an existing Interested or Not interested mark again clears it; selecting the opposite mark switches states.
+- Add Interested and Not interested actions to the existing Discover Schedule right-click menu, without row buttons.
+- Dismiss the Schedule menu using its native Escape handler; requires the DOM script permission and manual future updates.
+
+## 1.2.0
+
+- Extend Interested and Not interested marks to **Discover → Schedule**.
+- Add small **✓ Interested** and **⊘ Not interested** buttons below each show's airing time, since schedule rows do not expose Seanime's media-card plugin menu.
+- Reuse saved AniList series IDs so all scheduled episodes share the same mark with Search and Discover cards.
+- Show green borders and badges on interested rows; fade negative rows or hide their complete grid items when hiding is enabled.
+- Observe newly loaded schedule rows and remove all owned controls and styling when the plugin is disabled.
+- Preserve the existing plugin ID, saved marks, and Storage-only permission.
+- Add browser regression coverage for schedule controls, duplicate episodes, hiding, fresh-runtime persistence, undo, failed saves, and cleanup.
+
 ## 1.1.1
 
 - Add a 512 × 512 PNG icon with red not-interested and green interested symbols.

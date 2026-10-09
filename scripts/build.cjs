@@ -17,14 +17,14 @@ const manifest = {
     manifestURI: 'https://raw.githubusercontent.com/randoomdude/Seanime-Extension---Not-Interested/main/local-anime-not-interested.json',
     language: 'javascript',
     type: 'plugin',
-    description: 'Mark anime interested with a green border and badge, or not interested to fade or hide it in Search and Discover. Interested series stay visible when hiding is on.',
+    description: 'Mark anime interested with a green border and badge, or not interested to fade or hide it in Search and Discover, including the airing Schedule. Interested series stay visible when hiding is on.',
     author: 'randoomdude',
     icon,
     website: repository,
     readme: repository + '#readme',
     lang: 'en',
     payload,
-    plugin: { version: '1', permissions: { scopes: ['storage'], allow: { networkAccess: {} } } },
+    plugin: { version: '1', permissions: { scopes: ['storage'], allow: { networkAccess: {}, unsafeFlags: [{ flag: 'dom-script-manipulation', reason: 'Dismiss Schedule menus with a native Escape event after selecting a mark.' }] } } },
 };
 const marketplaceEntry = Object.fromEntries(['id', 'name', 'version', 'description', 'author', 'manifestURI', 'icon', 'type', 'language', 'lang', 'website'].map(key => [key, manifest[key]]));
 const outputs = {

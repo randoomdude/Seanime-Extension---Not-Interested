@@ -2,8 +2,8 @@
   {
     "id": "local-anime-not-interested",
     "name": "Not Interested",
-    "version": "1.1.1",
-    "description": "Mark anime interested with a green border and badge, or not interested to fade or hide it in Search and Discover. Interested series stay visible when hiding is on.",
+    "version": "1.2.1",
+    "description": "Mark anime interested with a green border and badge, or not interested to fade or hide it in Search and Discover, including the airing Schedule. Interested series stay visible when hiding is on.",
     "author": "randoomdude",
     "manifestURI": "https://raw.githubusercontent.com/randoomdude/Seanime-Extension---Not-Interested/main/local-anime-not-interested.json",
     "icon": "https://raw.githubusercontent.com/randoomdude/Seanime-Extension---Not-Interested/main/assets/icon.png",
